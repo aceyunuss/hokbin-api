@@ -26,7 +26,7 @@ require("./app/routes/menu_category_routes")(app);
 require("./app/routes/menu_routes")(app);
 require("./app/routes/promo_routes")(app);
 require("./app/routes/user_routes")(app);
-// require("./app/routes/menu_category_routes")(app);
+require("./app/routes/cart_routes")(app);
 // require("./app/routes/menu_category_routes")(app);
 // require("./app/routes/menu_category_routes")(app);
 

@@ -1,44 +1,44 @@
 const db = require("../models");
-const user = require("../models/user");
-const User = db.User;
+const cart = require("../models/cart");
+const cart_item = require("../models/cart_item");
+const Cart = db.Cart;
+const Cart_item = db.Cart_item;
 const Op = db.Sequelize.Op;
 
-exports.create = (req, res) => {
-  if (!req.body.name) {
-    res.status(400).send({
-      message: "Content can not be empty!",
-    });
-    return;
-  }
-
-  const user = {
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    type: req.body.type,
-    address: req.body.address,
-    bod: req.body.bod,
+exports.add = (req, res) => {
+  const cart = {
+    customer_id: req.body.customer_id,
+    total: req.body.total,
   };
 
-  User.create(user)
+  const cart_item = req.body.item;
+
+  Cart.create(cart)
     .then((data) => {
-      res.send(data);
+      cart_item.map((e) => {
+        e.cart_id = data.id;
+      });
+      Cart_item.bulkCreate(cart_item).then((data_item) => {
+        data.item = data_item;
+        // merged = Object.assign(data, data_item);
+        res.send(data);
+      });
     })
     .catch((err) => {
       res.status(500).send({
-        message: err.message || "Error create user",
+        message: err.message || "Error create cart",
       });
     });
 };
 
 exports.findAll = (req, res) => {
-  User.findAll({})
+  Cart.findAll({})
     .then((data) => {
       res.send(data);
     })
     .catch((err) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving Users.",
+        message: err.message || "Some error occurred while retrieving Carts.",
       });
     });
 };
@@ -46,14 +46,14 @@ exports.findAll = (req, res) => {
 exports.findOne = (req, res) => {
   const id = req.params.id;
 
-  User.findByPk(id).then((data) => {
+  Cart.findByPk(id).then((data) => {
     console.log(req);
     if (data) {
       res.send(data);
     } else {
       res.status(404).send({
         status: 404,
-        message: `Can't find user with id ${id}`,
+        message: `Can't find cart with id ${id}`,
       });
     }
   });
@@ -62,23 +62,23 @@ exports.findOne = (req, res) => {
 exports.update = (req, res) => {
   const id = req.params.id;
 
-  User.update(req.body, {
+  Cart.update(req.body, {
     where: { id: id },
   })
     .then((num) => {
       if (num == 1) {
         res.send({
-          message: "User was updated successfully.",
+          message: "Cart was updated successfully.",
         });
       } else {
         res.send({
-          message: `Cannot update user with id=${id}`,
+          message: `Cannot update cart with id=${id}`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
-        message: `Error updating user with id=${id}`,
+        message: `Error updating cart with id=${id}`,
       });
     });
 };
@@ -86,23 +86,23 @@ exports.update = (req, res) => {
 exports.delete = (req, res) => {
   const id = req.params.id;
 
-  User.destroy({
+  Cart.destroy({
     where: { id: id },
   })
     .then((num) => {
       if (num == 1) {
         res.send({
-          message: "User was deleted successfully!",
+          message: "Cart was deleted successfully!",
         });
       } else {
         res.send({
-          message: `Cannot delete user with id=${id}`,
+          message: `Cannot delete cart with id=${id}`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
-        message: `Could not delete user with id=${id}`,
+        message: `Could not delete cart with id=${id}`,
       });
     });
 };
@@ -111,14 +111,14 @@ exports.login = (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  User.findAll({ where: { email: email, password: password } }).then((data) => {
+  Cart.findAll({ where: { email: email, password: password } }).then((data) => {
     console.log(req);
     if (data) {
       res.send(data);
     } else {
       res.status(404).send({
         status: 404,
-        message: `Can't find user`,
+        message: `Can't find cart`,
       });
     }
   });
