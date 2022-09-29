@@ -1,5 +1,6 @@
 const db = require("../models");
 const menu = require("../models/menu");
+const helper = require("../helper/general");
 const Menu = db.Menu;
 const Op = db.Sequelize.Op;
 
@@ -120,11 +121,11 @@ exports.delete = (req, res) => {
 exports.findFilter = (req, res) => {
   const { page, size } = req.query;
 
-  const { limit, offset } = getPagination(page, size);
+  const { limit, offset } = helper.getPagination(page, size);
 
   Menu.findAndCountAll({ limit, offset })
     .then((data) => {
-      const response = getPagingData(data, page, limit);
+      const response = helper.getPagingData(data, page, limit);
       res.send(response);
     })
     .catch((err) => {
@@ -133,19 +134,4 @@ exports.findFilter = (req, res) => {
           err.message || "Some error occurred while retrieving tutorials.",
       });
     });
-};
-
-const getPagination = (page, size) => {
-  const limit = size ? +size : 3;
-  const offset = page ? page * limit : 0;
-
-  return { limit, offset };
-};
-
-const getPagingData = (data, page, limit) => {
-  const { count: totalItems, rows: tutorials } = data;
-  const currentPage = page ? +page : 0;
-  const totalPages = Math.ceil(totalItems / limit);
-
-  return { totalItems, tutorials, totalPages, currentPage };
 };
