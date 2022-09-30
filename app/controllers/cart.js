@@ -1,6 +1,7 @@
 const db = require("../models");
 const cart = require("../models/cart");
 const cart_item = require("../models/cart_item");
+const helper = require("../helper/general");
 const Cart = db.Cart;
 const Cart_item = db.Cart_item;
 const Op = db.Sequelize.Op;
@@ -19,9 +20,9 @@ exports.add = (req, res) => {
         e.cart_id = data.id;
       });
       Cart_item.bulkCreate(cart_item).then((data_item) => {
-        data.item = data_item;
-        // merged = Object.assign(data, data_item);
-        res.send(data);
+        header = data.toJSON();
+        header.item = data_item;
+        res.send(header);
       });
     })
     .catch((err) => {
@@ -32,9 +33,27 @@ exports.add = (req, res) => {
 };
 
 exports.findAll = (req, res) => {
-  Cart.findAll({})
+  Cart.findAll()
     .then((data) => {
-      res.send(data);
+      Cart_item.findAll().then((data_item) => {
+        ret_data = [];
+
+        data.map((v) => {
+          new_data = v.toJSON();
+          ret_data.push(new_data);
+
+          new_item = [];
+          data_item.map((i) => {
+            itm = i.toJSON();
+            if (itm.cart_id == new_data.id) {
+              new_item.push(itm);
+              new_data.item = new_item;
+            }
+          });
+        });
+
+        res.send(ret_data);
+      });
     })
     .catch((err) => {
       res.status(500).send({
@@ -59,20 +78,20 @@ exports.findOne = (req, res) => {
   });
 };
 
-exports.update = (req, res) => {
+exports.updateItem = (req, res) => {
   const id = req.params.id;
 
-  Cart.update(req.body, {
+  Cart_item.update(req.body, {
     where: { id: id },
   })
     .then((num) => {
       if (num == 1) {
         res.send({
-          message: "Cart was updated successfully.",
+          message: "Cart item was updated successfully.",
         });
       } else {
         res.send({
-          message: `Cannot update cart with id=${id}`,
+          message: `Cannot update cart item with id=${id}`,
         });
       }
     })

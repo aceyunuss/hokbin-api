@@ -5,8 +5,8 @@ module.exports = (app) => {
   router.post("/", cart.add);
   router.get("/", cart.findAll);
   router.get("/:id", cart.findOne);
-  router.put("/:id", cart.update);
-  router.delete("/:id", cart.delete);
+  router.put("/item/:id", cart.updateItem);
+  // router.delete("/item/:id", cart.deleteItem);
 
   app.use("/api/cart", router);
 };
