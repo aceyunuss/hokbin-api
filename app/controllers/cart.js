@@ -65,17 +65,26 @@ exports.findAll = (req, res) => {
 exports.findOne = (req, res) => {
   const id = req.params.id;
 
-  Cart.findByPk(id).then((data) => {
-    console.log(req);
-    if (data) {
-      res.send(data);
-    } else {
-      res.status(404).send({
-        status: 404,
-        message: `Can't find cart with id ${id}`,
+  Cart.findByPk(id)
+    .then((data) => {
+      if (data) {
+        Cart_item.findAll({ where: { cart_id: id } }).then((data_item) => {
+          header = data.toJSON();
+          header.item = data_item;
+          res.send(header);
+        });
+      } else {
+        res.status(404).send({
+          status: 404,
+          message: `Can't find cart with id ${id}`,
+        });
+      }
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while retrieving Carts.",
       });
-    }
-  });
+    });
 };
 
 exports.updateItem = (req, res) => {
@@ -124,21 +133,4 @@ exports.delete = (req, res) => {
         message: `Could not delete cart with id=${id}`,
       });
     });
-};
-
-exports.login = (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-
-  Cart.findAll({ where: { email: email, password: password } }).then((data) => {
-    console.log(req);
-    if (data) {
-      res.send(data);
-    } else {
-      res.status(404).send({
-        status: 404,
-        message: `Can't find cart`,
-      });
-    }
-  });
 };
