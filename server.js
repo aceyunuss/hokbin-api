@@ -30,9 +30,9 @@ require("./app/routes/cart_routes")(app);
 // require("./app/routes/menu_category_routes")(app);
 // require("./app/routes/menu_category_routes")(app);
 
-
+require('dotenv').config()
 // set port, listen for requests
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
