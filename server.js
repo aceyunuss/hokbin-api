@@ -20,8 +20,7 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to asdasd application." });
 });
 
-
-//add routes 
+//add routes
 require("./app/routes/menu_category_routes")(app);
 require("./app/routes/menu_routes")(app);
 require("./app/routes/promo_routes")(app);
@@ -30,7 +29,7 @@ require("./app/routes/cart_routes")(app);
 // require("./app/routes/menu_category_routes")(app);
 // require("./app/routes/menu_category_routes")(app);
 
-require('dotenv').config()
+require("dotenv").config();
 // set port, listen for requests
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
