@@ -114,12 +114,24 @@ exports.findFilter = async (req, res) => {
 };
 
 exports.update = async (req, res) => {
-  if (!req.params.id) {
+  if (
+    !req.body.name ||
+    !req.body.discount ||
+    !req.body.min_order ||
+    !req.body.max_discount ||
+    !req.body.end_date
+  ) {
     response.badRequest("Missing required field", res);
     return;
   }
   const id = req.params.id;
-  const data = { category_name: req.body.category_name };
+  const data = {
+    promo_name: req.body.name,
+    discount: req.body.discount,
+    min_order: req.body.min_order,
+    max_discount: req.body.max_discount,
+    end_date: req.body.end_date,
+  };
 
   const upd = await updateData(id, data);
   if (typeof upd.msg != "object") {
