@@ -1,17 +1,65 @@
 const db = require("../models");
-const promo = require("../models/promo");
-const helper = require("../helper/general");
 const Promo = db.Promo;
-const Op = db.Sequelize.Op;
+const response = require("../utils/response");
+const general = require("../utils/general");
 
-exports.create = (req, res) => {
-  if (!req.body.name) {
-    res.status(400).send({
-      message: "Content can not be empty!",
+const insertData = async (data_ins) => {
+  try {
+    const stat_ins = await Promo.create(data_ins);
+    const stat_res = stat_ins.toJSON();
+    return { msg: "success", data: stat_res };
+  } catch (error) {
+    return { msg: error };
+  }
+};
+
+const getData = async (cond = {}) => {
+  try {
+    const stat_find = await Promo.findAll({ where: cond });
+    return {
+      msg: "success",
+      data: stat_find.length == 1 ? stat_find[0] : stat_find,
+    };
+  } catch (error) {
+    return { msg: error };
+  }
+};
+
+const updateData = async (id, data = {}) => {
+  try {
+    await Promo.update(data, {
+      where: { id: id },
     });
+    const data_ret = await getData({ id: id });
+    const stat_res = data_ret.data;
+    return { msg: "success", data: stat_res };
+  } catch (error) {
+    return { msg: error };
+  }
+};
+
+const deleteData = async (id) => {
+  try {
+    const stat_res = await Promo.destroy({
+      where: { id: id },
+    });
+    return { msg: "success", data: stat_res };
+  } catch (error) {
+    return { msg: error };
+  }
+};
+
+exports.create = async (req, res) => {
+  if (
+    !req.body.name ||
+    !req.body.discount ||
+    !req.body.min_order ||
+    !req.body.max_discount ||
+    !req.body.end_date
+  ) {
+    response.badRequest("Missing required field", res);
     return;
   }
-
   const promo = {
     promo_name: req.body.name,
     discount: req.body.discount,
@@ -19,108 +67,79 @@ exports.create = (req, res) => {
     max_discount: req.body.max_discount,
     end_date: req.body.end_date,
   };
-
-  Promo.create(promo)
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: err.message || "Error create promo",
-      });
-    });
+  const ins = await insertData(promo);
+  if (typeof ins.msg != "object") {
+    response.success("Success create promo", res, ins.data);
+  } else {
+    response.internalServerError("Error create promo", res);
+  }
 };
 
-exports.findAll = (req, res) => {
-  Promo.findAll({})
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: err.message || "Some error occurred while retrieving Promos.",
-      });
-    });
+exports.findAll = async (req, res) => {
+  const fnd = await getData();
+  if (typeof fnd.msg != "object") {
+    response.success("Success get promo", res, fnd.data);
+  } else {
+    response.internalServerError("Error get promo", res);
+  }
 };
 
-exports.findOne = (req, res) => {
+exports.findOne = async (req, res) => {
+  const cond = { id: req.params.id };
+  const fnd = await getData(cond);
+  if (typeof fnd.msg != "object") {
+    response.success("Success get promo", res, fnd.data);
+  } else {
+    response.internalServerError("Error get promo", res);
+  }
+};
+
+exports.findFilter = async (req, res) => {
+  if (!req.query.limit || !req.query.offset) {
+    response.badRequest("Missing required field", res);
+    return;
+  }
+  const lim = req.query.limit;
+  const off = req.query.offset;
+  const { limit, offset } = general.getPagination(lim, off);
+
+  const fnd = await Promo.findAndCountAll({ limit, offset });
+  const fnd_res = general.getPagingData(fnd, off, lim);
+
+  if (typeof fnd.msg != "object") {
+    response.success("Success get promo", res, fnd_res);
+  } else {
+    response.internalServerError("Error get promo", res);
+  }
+};
+
+exports.update = async (req, res) => {
+  if (!req.params.id) {
+    response.badRequest("Missing required field", res);
+    return;
+  }
   const id = req.params.id;
+  const data = { category_name: req.body.category_name };
 
-  Promo.findByPk(id).then((data) => {
-    console.log(req);
-    if (data) {
-      res.send(data);
+  const upd = await updateData(id, data);
+  if (typeof upd.msg != "object") {
+    response.success("Success update promo", res, upd.data);
+  } else {
+    response.internalServerError("Error update promo", res);
+  }
+};
+
+exports.delete = async (req, res) => {
+  const id = req.params.id;
+  const del = await deleteData(id);
+
+  if (typeof del.msg != "object") {
+    if (del.data == 1) {
+      response.success("Success delete promo", res, del.data);
     } else {
-      res.status(404).send({
-        status: 404,
-        message: `Can't find promo with id ${id}`,
-      });
+      response.notFound("Error delete promo. Data not found", res);
     }
-  });
-};
-
-exports.update = (req, res) => {
-  const id = req.params.id;
-
-  Promo.update(req.body, {
-    where: { id: id },
-  })
-    .then((num) => {
-      if (num == 1) {
-        res.send({
-          message: "Promo was updated successfully.",
-        });
-      } else {
-        res.send({
-          message: `Cannot update promo with id=${id}`,
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: `Error updating promo with id=${id}`,
-      });
-    });
-};
-
-exports.delete = (req, res) => {
-  const id = req.params.id;
-
-  Promo.destroy({
-    where: { id: id },
-  })
-    .then((num) => {
-      if (num == 1) {
-        res.send({
-          message: "Promo was deleted successfully!",
-        });
-      } else {
-        res.send({
-          message: `Cannot delete promo with id=${id}`,
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: `Could not delete promo with id=${id}`,
-      });
-    });
-};
-
-exports.findFilter = (req, res) => {
-  const { page, size } = req.query;
-
-  const { limit, offset } = helper.getPagination(page, size);
-
-  Promo.findAndCountAll({ limit, offset })
-    .then((data) => {
-      const response = helper.getPagingData(data, page, limit);
-      res.send(response);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving tutorials.",
-      });
-    });
+  } else {
+    response.internalServerError("Error delete promo", res);
+  }
 };
