@@ -10,10 +10,6 @@ module.exports = {
       },
       cart_id: {
         type: Sequelize.INTEGER,
-        references: {
-          model: "carts",
-          key: "id",
-        },
       },
       menu_id: {
         type: Sequelize.INTEGER,

@@ -1,14 +1,25 @@
 const db = require("../models");
-const Cart = db.Cart_item;
+const Order = db.Order;
+const Order_item = db.Order_item;
 const response = require("../utils/response");
 const general = require("../utils/general");
-const promo = require("../controllers/promo");
-const order = require("../controllers/order");
 
 const insertData = async (data_ins) => {
   try {
-    const stat_ins = await Cart.create(data_ins);
+    const stat_ins = await Order.create(data_ins);
     const stat_res = stat_ins.toJSON();
+    return { msg: "success", data: stat_res };
+  } catch (error) {
+    return { msg: error };
+  }
+};
+
+const insertDataItem = async (data_ins) => {
+  try {
+    const stat_ins = await Order_item.bulkCreate(data_ins);
+    const stat_res = await getDataItem({
+      order_id: stat_ins[0].toJSON().order_id,
+    });
     return { msg: "success", data: stat_res };
   } catch (error) {
     return { msg: error };
@@ -17,7 +28,20 @@ const insertData = async (data_ins) => {
 
 const getData = async (cond = {}) => {
   try {
-    const stat_find = await Cart.findAll({ where: cond });
+    const stat_find = await Order.findAll({ where: cond });
+    return {
+      msg: "success",
+      count: stat_find.length,
+      data: stat_find,
+    };
+  } catch (error) {
+    return { msg: error };
+  }
+};
+
+const getDataItem = async (cond = {}) => {
+  try {
+    const stat_find = await Order_item.findAll({ where: cond, raw: true });
     return {
       msg: "success",
       count: stat_find.length,
@@ -30,7 +54,7 @@ const getData = async (cond = {}) => {
 
 const updateData = async (id, data = {}) => {
   try {
-    await Cart.update(data, {
+    await Order.update(data, {
       where: { id: id },
     });
     const data_ret = await getData({ id: id });
@@ -41,9 +65,22 @@ const updateData = async (id, data = {}) => {
   }
 };
 
+const updateDataItem = async (id, data = {}) => {
+  try {
+    await Order_item.update(data, {
+      where: { id: id },
+    });
+    const data_ret = await getDataItem({ id: id });
+    const stat_res = data_ret.data;
+    return { msg: "success", data: stat_res };
+  } catch (error) {
+    return { msg: error };
+  }
+};
+
 const deleteData = async (id) => {
   try {
-    const stat_res = await Cart.destroy({
+    const stat_res = await Order.destroy({
       where: { id: id },
     });
     return { msg: "success", data: stat_res };
@@ -52,31 +89,14 @@ const deleteData = async (id) => {
   }
 };
 
-exports.create = async (req, res) => {
-  if (
-    !req.body.menu_id ||
-    !req.body.menu_name ||
-    !req.body.price ||
-    !req.body.qty ||
-    !req.body.total ||
-    !req.body.customer_id
-  ) {
-    response.badRequest("Missing required field", res);
-    return;
-  }
-  const cart = {
-    menu_id: req.body.menu_id,
-    menu_name: req.body.menu_name,
-    price: req.body.price,
-    qty: req.body.qty,
-    total: req.body.total,
-    customer_id: req.body.customer_id,
-  };
-  const ins = await insertData(cart);
-  if (typeof ins.msg != "object") {
-    response.success("Success add cart", res, ins.data);
-  } else {
-    response.internalServerError("Error add cart", res);
+const deleteDataItem = async (id) => {
+  try {
+    const stat_res = await Order_item.destroy({
+      where: { id: id },
+    });
+    return { msg: "success", data: stat_res };
+  } catch (error) {
+    return { msg: error };
   }
 };
 
@@ -96,7 +116,7 @@ exports.findOne = async (req, res) => {
     if (fnd.count > 0) {
       response.success("Success get cart", res, fnd.data);
     } else {
-      response.notFound("Cart not found", res);
+      response.notFound("Order not found", res);
     }
   } else {
     response.internalServerError("Error get cart", res);
@@ -112,7 +132,7 @@ exports.findFilter = async (req, res) => {
   const off = req.query.offset;
   const { limit, offset } = general.getPagination(lim, off);
 
-  const fnd = await Cart.findAndCountAll({ limit, offset });
+  const fnd = await Order.findAndCountAll({ limit, offset });
   const fnd_res = general.getPagingData(fnd, off, lim);
 
   if (typeof fnd.msg != "object") {
@@ -156,47 +176,19 @@ exports.delete = async (req, res) => {
   }
 };
 
-exports.checkout = async (req, res) => {
-  const cond = { customer_id: req.params.id };
-  const discount_id = req.body.discount_id;
-  let item = [];
-  let total_item = 0;
-  const fnd = await getData(cond);
+exports.createOrder = async (data) => {
+  const last = await Order.count();
+  const ord_code = last + 1;
 
-  if (fnd.count == 0) {
-    response.notFound("Cart item not fount", res);
+  data.main.order_code = "ORD.00" + ord_code;
+  ord = await insertData(data.main);
+
+  data.item.map((v, i) => (data.item[i].order_id = ord.data.id));
+  itm = await insertDataItem(data.item);
+
+  if (typeof ord.msg != "object" && typeof itm.msg != "object") {
+    return { main_ret: ord, item_ret: itm };
   } else {
-    fnd.data.map((v) => {
-      total_item += v.total;
-    });
-    const disc = await promo.checkPromo(discount_id, total_item);
-
-    const ord = {
-      order_date: new Date(),
-      customer_id: fnd.data[0].customer_id,
-      discount_id: discount_id,
-      total: total_item,
-      total_discount: total_item - disc,
-      status: 1,
-    };
-
-    fnd.data.map((v, i) => {
-      itm = v.toJSON();
-      item[i] = {
-        menu_id: itm.menu_id,
-        menu_name: itm.menu_name,
-        price: itm.price,
-        qty: itm.qty,
-        total: itm.total,
-      };
-    });
-
-    stat = await order.createOrder({ main: ord, item: item });
-
-    if (typeof stat == "object") {
-      response.success("Success checkout item", res, {});
-    } else {
-      response.internalServerError("Error checkout item", res);
-    }
+    return "failed";
   }
 };

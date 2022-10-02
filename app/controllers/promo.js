@@ -160,3 +160,22 @@ exports.delete = async (req, res) => {
     response.internalServerError("Error delete promo", res);
   }
 };
+
+exports.checkPromo = async (id, total) => {
+  const { Sequelize } = require("sequelize");
+  const Op = Sequelize.Op;
+  const cond = {
+    id: id,
+    end_date: { [Op.gte]: new Date() },
+    min_order: { [Op.lte]: total },
+  };
+  const fnd = await getData(cond);
+  if (fnd.count > 0) {
+    promo = fnd.data[0].toJSON();
+    let disc = parseFloat(promo.discount / 100) * total;
+    disc = disc > promo.max_discount ? promo.max_discount : disc;
+    return disc;
+  } else {
+    return 0;
+  }
+};
