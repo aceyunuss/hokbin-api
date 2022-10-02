@@ -194,6 +194,9 @@ exports.checkout = async (req, res) => {
     stat = await order.createOrder({ main: ord, item: item });
 
     if (typeof stat == "object") {
+      await Cart.destroy({
+        where: { customer_id: fnd.data[0].customer_id },
+      });
       response.success("Success checkout item", res, {});
     } else {
       response.internalServerError("Error checkout item", res);
