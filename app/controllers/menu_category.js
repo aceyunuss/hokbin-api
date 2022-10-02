@@ -18,6 +18,7 @@ const getData = async (cond = {}) => {
     const stat_find = await Menu_category.findAll({ where: cond });
     return {
       msg: "success",
+      count: stat_find.length,
       data: stat_find.length == 1 ? stat_find[0] : stat_find,
     };
   } catch (error) {
@@ -78,7 +79,11 @@ exports.findOne = async (req, res) => {
   const cond = { id: req.params.id };
   const fnd = await getData(cond);
   if (typeof fnd.msg != "object") {
-    response.success("Success get menu category", res, fnd.data);
+    if (fnd.count > 0) {
+      response.success("Success get menu category", res, fnd.data);
+    } else {
+      response.notFound("Menu category not found", res);
+    }
   } else {
     response.internalServerError("Error get menu category", res);
   }
