@@ -19,7 +19,7 @@ const getData = async (cond = {}) => {
     return {
       msg: "success",
       count: stat_find.length,
-      data: stat_find.length == 1 ? stat_find[0] : stat_find,
+      data: stat_find,
     };
   } catch (error) {
     return { msg: error };
