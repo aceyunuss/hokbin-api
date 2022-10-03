@@ -114,7 +114,8 @@ exports.findAll = async (req, res) => {
         }
       });
       if (itm.length > 0) {
-        data_ret[i].item = itm;
+        filtered = itm.filter((value) => Object.keys(value).length !== 0);
+        data_ret[i].item = filtered;
       }
     });
     response.success("Success get order", res, data_ret);
