@@ -28,7 +28,7 @@ const insertDataItem = async (data_ins) => {
 
 const getData = async (cond = {}) => {
   try {
-    const stat_find = await Order.findAll({ where: cond });
+    const stat_find = await Order.findAll({ where: cond, raw: true });
     return {
       msg: "success",
       count: stat_find.length,
@@ -102,24 +102,41 @@ const deleteDataItem = async (id) => {
 
 exports.findAll = async (req, res) => {
   const fnd = await getData();
+  const fnd_itm = await getDataItem();
   if (typeof fnd.msg != "object") {
-    response.success("Success get cart", res, fnd.data);
+    data_ret = [];
+    fnd.data.forEach((v, i) => {
+      data_ret[i] = v;
+      itm = [];
+      fnd_itm.data.forEach((vv, ii) => {
+        if (vv.order_id == v.id) {
+          itm[ii] = vv;
+        }
+      });
+      if (itm.length > 0) {
+        data_ret[i].item = itm;
+      }
+    });
+    response.success("Success get order", res, data_ret);
   } else {
-    response.internalServerError("Error get cart", res);
+    response.internalServerError("Error get order", res);
   }
 };
 
 exports.findOne = async (req, res) => {
-  const cond = { customer_id: req.params.id };
+  const cond = { id: req.params.id };
   const fnd = await getData(cond);
+  const fnd_itm = await getDataItem({ order_id: req.params.id });
+  let data_ret = fnd.data;
+  data_ret[0].item = fnd_itm.data;
   if (typeof fnd.msg != "object") {
     if (fnd.count > 0) {
-      response.success("Success get cart", res, fnd.data);
+      response.success("Success get order", res, data_ret);
     } else {
       response.notFound("Order not found", res);
     }
   } else {
-    response.internalServerError("Error get cart", res);
+    response.internalServerError("Error get order", res);
   }
 };
 
@@ -136,28 +153,42 @@ exports.findFilter = async (req, res) => {
   const fnd_res = general.getPagingData(fnd, off, lim);
 
   if (typeof fnd.msg != "object") {
-    response.success("Success get cart", res, fnd_res);
+    response.success("Success get order", res, fnd_res);
   } else {
-    response.internalServerError("Error get cart", res);
+    response.internalServerError("Error get order", res);
   }
 };
 
-exports.update = async (req, res) => {
-  if (!req.body.qty || !req.body.total) {
+exports.setDriver = async (req, res) => {
+  if (!req.body.driver_id) {
     response.badRequest("Missing required field", res);
     return;
   }
   const id = req.params.id;
   const data = {
-    qty: req.body.qty,
-    total: req.body.total,
+    status: 2,
+    driver_id: req.body.driver_id,
+  };
+  const upd = await updateData(id, data);
+  if (typeof upd.msg != "object") {
+    response.success("Success set driver", res, upd.data);
+  } else {
+    response.internalServerError("Error set driver", res);
+  }
+};
+
+exports.complete = async (req, res) => {
+  const id = req.params.id;
+  const data = {
+    status: 3,
+    completed_date: new Date(),
   };
 
   const upd = await updateData(id, data);
   if (typeof upd.msg != "object") {
-    response.success("Success update cart", res, upd.data);
+    response.success("Success completed order", res, upd.data);
   } else {
-    response.internalServerError("Error update cart", res);
+    response.internalServerError("Error completed order", res);
   }
 };
 
@@ -167,12 +198,12 @@ exports.delete = async (req, res) => {
 
   if (typeof del.msg != "object") {
     if (del.data == 1) {
-      response.success("Success delete cart", res, del.data);
+      response.success("Success delete order", res, del.data);
     } else {
-      response.notFound("Error delete cart. Data not found", res);
+      response.notFound("Error delete order. Data not found", res);
     }
   } else {
-    response.internalServerError("Error delete cart", res);
+    response.internalServerError("Error delete order", res);
   }
 };
 

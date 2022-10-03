@@ -27,7 +27,7 @@ require("./app/routes/promo_routes")(app);
 require("./app/routes/user_routes")(app);
 require("./app/routes/cart_routes")(app);
 require("./app/routes/driver_routes")(app);
-// require("./app/routes/menu_category_routes")(app);
+require("./app/routes/order_routes")(app);
 
 require("dotenv").config();
 // set port, listen for requests
