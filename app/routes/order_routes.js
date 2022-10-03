@@ -5,7 +5,8 @@ module.exports = (app) => {
 
   router.get("/", order.findAll);
   router.get("/:id", order.findOne);
-  router.put("/set_driver/:id", order.setDriver);
+  router.put("/driver/:id", order.setDriver);
+  router.put("/delivery/:id", order.setDelivery);
   router.put("/complete/:id", order.complete);
   router.delete("/:id", order.delete);
 

@@ -171,22 +171,48 @@ exports.setDriver = async (req, res) => {
   };
   const upd = await updateData(id, data);
   if (typeof upd.msg != "object") {
-    response.success("Success set driver", res, upd.data);
+    if (upd.data.length > 0) {
+      response.success("Success set driver", res, upd.data);
+    } else {
+      response.notFound("Order not found", res);
+    }
   } else {
     response.internalServerError("Error set driver", res);
+  }
+};
+
+exports.setDelivery = async (req, res) => {
+  const id = req.params.id;
+  const data = {
+    status: 3,
+  };
+  const upd = await updateData(id, data);
+  if (typeof upd.msg != "object") {
+    if (upd.data.length > 0) {
+      response.success("Success set delivery", res, upd.data);
+    } else {
+      response.notFound("Order not found", res);
+    }
+  } else {
+    response.internalServerError("Error set delivery", res);
   }
 };
 
 exports.complete = async (req, res) => {
   const id = req.params.id;
   const data = {
-    status: 3,
+    status: 4,
     completed_date: new Date(),
   };
 
   const upd = await updateData(id, data);
+
   if (typeof upd.msg != "object") {
-    response.success("Success completed order", res, upd.data);
+    if (upd.data.length > 0) {
+      response.success("Success completed order", res, upd.data);
+    } else {
+      response.notFound("Order not found", res);
+    }
   } else {
     response.internalServerError("Error completed order", res);
   }
