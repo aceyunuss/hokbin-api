@@ -4,6 +4,7 @@ module.exports = (app) => {
   var router = require("express").Router();
   router.post("/", driver.create);
   router.post("/login", driver.login);
+  router.get("/filter", driver.findFilter);
   router.get("/", driver.findAll);
   router.get("/:id", driver.findOne);
   router.put("/:id", driver.update);
