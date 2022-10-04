@@ -3,53 +3,6 @@ const User = db.User;
 const response = require("../utils/response");
 const general = require("../utils/general");
 
-const insertData = async (data_ins) => {
-  try {
-    const stat_ins = await User.create(data_ins);
-    const stat_res = stat_ins.toJSON();
-    return { msg: "success", data: stat_res };
-  } catch (error) {
-    return { msg: error };
-  }
-};
-
-const getData = async (cond = {}) => {
-  try {
-    const stat_find = await User.findAll({ where: cond });
-    return {
-      msg: "success",
-      count: stat_find.length,
-      data: stat_find,
-    };
-  } catch (error) {
-    return { msg: error };
-  }
-};
-
-const updateData = async (id, data = {}) => {
-  try {
-    await User.update(data, {
-      where: { id: id },
-    });
-    const data_ret = await getData({ id: id });
-    const stat_res = data_ret.data;
-    return { msg: "success", data: stat_res };
-  } catch (error) {
-    return { msg: error };
-  }
-};
-
-const deleteData = async (id) => {
-  try {
-    const stat_res = await User.destroy({
-      where: { id: id },
-    });
-    return { msg: "success", data: stat_res };
-  } catch (error) {
-    return { msg: error };
-  }
-};
-
 exports.create = async (req, res) => {
   if (
     !req.body.name ||
@@ -72,7 +25,7 @@ exports.create = async (req, res) => {
     bod: req.body.bod,
   };
 
-  const ins = await insertData(user);
+  const ins = await User.insertData(user);
   if (typeof ins.msg != "object") {
     response.success("Success create user", res, ins.data);
   } else {
@@ -81,7 +34,7 @@ exports.create = async (req, res) => {
 };
 
 exports.findAll = async (req, res) => {
-  const fnd = await getData();
+  const fnd = await User.getData();
   if (typeof fnd.msg != "object") {
     response.success("Success get user", res, fnd.data);
   } else {
@@ -91,7 +44,7 @@ exports.findAll = async (req, res) => {
 
 exports.findOne = async (req, res) => {
   const cond = { id: req.params.id };
-  const fnd = await getData(cond);
+  const fnd = await User.getData(cond);
   if (typeof fnd.msg != "object") {
     if (fnd.count > 0) {
       response.success("Success get user", res, fnd.data);
@@ -146,7 +99,7 @@ exports.update = async (req, res) => {
     bod: req.body.bod,
   };
 
-  const upd = await updateData(id, data);
+  const upd = await User.updateData(id, data);
   if (typeof upd.msg != "object") {
     response.success("Success update user", res, upd.data);
   } else {
@@ -156,7 +109,7 @@ exports.update = async (req, res) => {
 
 exports.delete = async (req, res) => {
   const id = req.params.id;
-  const del = await deleteData(id);
+  const del = await User.deleteData(id);
 
   if (typeof del.msg != "object") {
     if (del.data == 1) {
@@ -179,7 +132,7 @@ exports.login = async (req, res) => {
     password: req.body.password,
   };
 
-  const fnd = await getData(cond);
+  const fnd = await User.getData(cond);
   if (typeof fnd.msg != "object") {
     if (fnd.count > 0) {
       response.success("Success get user", res, fnd.data);
