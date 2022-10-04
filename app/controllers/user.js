@@ -143,3 +143,13 @@ exports.login = async (req, res) => {
     response.internalServerError("Error get user", res);
   }
 };
+
+exports.logins = async (req, res) => {
+  const em = req.body.email;
+  const pw = req.body.password;
+  const data = await db.sequelize.query(
+    `select * from users WHERE email = '${em}' and password = '${pw}'`,
+    { type: db.sequelize.QueryTypes.SELECT }
+  );
+  response.success("asdf", res, data);
+};
