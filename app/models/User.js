@@ -62,7 +62,7 @@ module.exports = (sequelize, DataTypes) => {
       await User.update(data, {
         where: { id: id },
       });
-      const data_ret = await getData({ id: id });
+      const data_ret = await User.getData({ id: id });
       const stat_res = data_ret.data;
       return { msg: "success", data: stat_res };
     } catch (error) {
