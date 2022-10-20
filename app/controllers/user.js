@@ -62,15 +62,18 @@ exports.findFilter = async (req, res) => {
     return;
   }
   const lim = req.query.limit;
-  const off = req.query.offset;
+  const off = req.query.offset - 1;
   const { limit, offset } = general.getPagination(lim, off);
 
-  const fnd = await User.findAndCountAll({ limit, offset });
-  const fnd_res = general.getPagingData(fnd, off, lim);
-
-  if (typeof fnd.msg != "object") {
-    response.success("Success get user", res, fnd_res);
-  } else {
+  try {
+    const fnd = await User.findAndCountAll({ limit, offset });
+    const fnd_res = general.getPagingData(fnd, off, lim);
+    if (typeof fnd.msg != "object") {
+      response.success("Success get user", res, fnd_res);
+    } else {
+      response.internalServerError("Error get user", res);
+    }
+  } catch (error) {
     response.internalServerError("Error get user", res);
   }
 };
@@ -135,9 +138,9 @@ exports.login = async (req, res) => {
   const fnd = await User.getData(cond);
   if (typeof fnd.msg != "object") {
     if (fnd.count > 0) {
-      response.success("Success get user", res, fnd.data);
+      response.success("Success login", res, { token: "test123" });
     } else {
-      response.notFound("User not found", res);
+      response.failLogin("User not found", res);
     }
   } else {
     response.internalServerError("Error get user", res);

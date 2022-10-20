@@ -95,7 +95,7 @@ exports.findFilter = async (req, res) => {
     return;
   }
   const lim = req.query.limit;
-  const off = req.query.offset;
+  const off = req.query.offset - 1;
   const { limit, offset } = general.getPagination(lim, off);
 
   const fnd = await Menu_category.findAndCountAll({ limit, offset });
