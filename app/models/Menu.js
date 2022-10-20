@@ -25,5 +25,14 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
     }
   );
+
+  Menu.associate = function (models) {
+    // associations can be defined here
+    Menu.belongsTo(models.Menu_category, {
+      as: "category",
+      foreignKey: "category_id",
+      // onDelete: "CASCADE",
+    });
+  };
   return Menu;
 };

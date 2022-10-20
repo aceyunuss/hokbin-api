@@ -1,7 +1,15 @@
 const db = require("../models");
 const Menu = db.Menu;
+const Menu_category = db.Menu_category;
 const response = require("../utils/response");
 const general = require("../utils/general");
+
+Menu.hasOne(Menu_category, {
+  foreignKey: {
+    name: "category_id",
+  },
+});
+Menu_category.belongsTo(Menu);
 
 const insertData = async (data_ins) => {
   try {
@@ -15,7 +23,18 @@ const insertData = async (data_ins) => {
 
 const getData = async (cond = {}) => {
   try {
-    const stat_find = await Menu.findAll({ where: cond });
+    const stat_find = await Menu.findAll({
+      where: cond,
+      include: [
+        {
+          model: Menu_category,
+          required: false,
+          as: "category",
+          attributes: ["id", "category_name"],
+        },
+      ],
+    });
+
     return {
       msg: "success",
       count: stat_find.length,
@@ -111,7 +130,7 @@ exports.findFilter = async (req, res) => {
     return;
   }
   const lim = req.query.limit;
-  const off = req.query.offset;
+  const off = req.query.offset - 1;
   const { limit, offset } = general.getPagination(lim, off);
 
   const fnd = await Menu.findAndCountAll({ limit, offset });
