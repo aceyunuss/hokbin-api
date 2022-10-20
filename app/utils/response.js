@@ -7,6 +7,14 @@ exports.success = (msg, res, data = {}) => {
   });
 };
 
+exports.failLogin = (msg, res) => {
+  res.status(201).json({
+    status: "failed",
+    status_code: 201,
+    message: msg,
+  });
+};
+
 exports.badRequest = (msg, res) => {
   res.status(400).json({
     status: "failed",
