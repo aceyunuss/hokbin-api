@@ -135,10 +135,13 @@ exports.login = async (req, res) => {
     password: req.body.password,
   };
 
-  const fnd = await User.getData(cond);
+  const col = ["id", "name"];
+
+  const fnd = await User.getData(cond, col);
   if (typeof fnd.msg != "object") {
     if (fnd.count > 0) {
-      response.success("Success login", res, { token: "test123" });
+      fnd.data[0].token = "test123";
+      response.success("Success get user", res, fnd.data);
     } else {
       response.failLogin("User not found", res);
     }

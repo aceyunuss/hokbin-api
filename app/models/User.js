@@ -44,9 +44,14 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
 
-  User.getData = async (cond = {}) => {
+  User.getData = async (cond = {}, attr = []) => {
+    const all = ["*"];
     try {
-      const stat_find = await User.findAll({ where: cond });
+      const stat_find = await User.findAll({
+        where: cond,
+        raw: true,
+        attributes: attr.length === 0 ? all : attr,
+      });
       return {
         msg: "success",
         count: stat_find.length,
