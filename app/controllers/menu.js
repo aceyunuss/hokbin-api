@@ -4,13 +4,6 @@ const Menu_category = db.Menu_category;
 const response = require("../utils/response");
 const general = require("../utils/general");
 
-Menu.hasOne(Menu_category, {
-  foreignKey: {
-    name: "category_id",
-  },
-});
-Menu_category.belongsTo(Menu);
-
 const insertData = async (data_ins) => {
   try {
     const stat_ins = await Menu.create(data_ins);
@@ -133,7 +126,21 @@ exports.findFilter = async (req, res) => {
   const off = req.query.offset - 1;
   const { limit, offset } = general.getPagination(lim, off);
 
-  const fnd = await Menu.findAndCountAll({ limit, offset });
+  const fnd = await Menu.findAndCountAll({
+    limit,
+    offset,
+    raw: true,
+    attributes: ["id", "price", "menu_name"],
+    include: [
+      {
+        model: Menu_category,
+        required: false,
+        as: "category",
+        attributes: ["id", "category_name"],
+      },
+    ],
+  });
+
   const fnd_res = general.getPagingData(fnd, off, lim);
 
   if (typeof fnd.msg != "object") {
