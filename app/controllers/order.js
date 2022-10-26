@@ -1,6 +1,8 @@
 const db = require("../models");
 const Order = db.Order;
 const Order_item = db.Order_item;
+const Driver = db.Driver;
+const User = db.User;
 const response = require("../utils/response");
 const general = require("../utils/general");
 
@@ -28,7 +30,25 @@ const insertDataItem = async (data_ins) => {
 
 const getData = async (cond = {}) => {
   try {
-    const stat_find = await Order.findAll({ where: cond, raw: true });
+    const stat_find = await Order.findAll({
+      where: cond,
+      include: [
+        {
+          model: Driver,
+          required: false,
+          as: "driver",
+          attributes: ["id", "driver_name"],
+        },
+        {
+          model: User,
+          required: false,
+          as: "customer",
+          attributes: ["id", "name"],
+        },
+      ],
+      // raw: true,
+    });
+
     return {
       msg: "success",
       count: stat_find.length,
@@ -128,8 +148,11 @@ exports.findOne = async (req, res) => {
   const cond = { id: req.params.id };
   const fnd = await getData(cond);
   const fnd_itm = await getDataItem({ order_id: req.params.id });
-  let data_ret = fnd.data;
+
+  let data_ret = [];
+  data_ret[0] = fnd.data[0].toJSON();
   data_ret[0].item = fnd_itm.data;
+
   if (typeof fnd.msg != "object") {
     if (fnd.count > 0) {
       response.success("Success get order", res, data_ret);
@@ -150,7 +173,24 @@ exports.findFilter = async (req, res) => {
   const off = req.query.offset - 1;
   const { limit, offset } = general.getPagination(lim, off);
 
-  const fnd = await Order.findAndCountAll({ limit, offset });
+  const fnd = await Order.findAndCountAll({
+    limit,
+    offset,
+    include: [
+      {
+        model: Driver,
+        required: false,
+        as: "driver",
+        attributes: ["id", "driver_name"],
+      },
+      {
+        model: User,
+        required: false,
+        as: "customer",
+        attributes: ["id", "name"],
+      },
+    ],
+  });
   const fnd_res = general.getPagingData(fnd, off, lim);
 
   if (typeof fnd.msg != "object") {

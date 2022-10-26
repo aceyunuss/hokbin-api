@@ -34,6 +34,13 @@ module.exports = (sequelize, DataTypes) => {
     return 99;
   };
 
+  User.associate = function (models) {
+    User.hasOne(models.Order, {
+      as: "customer",
+      foreignKey: "customer_id",
+    });
+  };
+
   User.insertData = async (data_ins) => {
     try {
       const stat_ins = await User.create(data_ins);

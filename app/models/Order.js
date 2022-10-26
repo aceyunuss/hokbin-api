@@ -28,5 +28,16 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "Order",
     }
   );
+
+  Order.associate = function (models) {
+    Order.belongsTo(models.Driver, {
+      as: "driver",
+      foreignKey: "driver_id",
+    });
+    Order.belongsTo(models.User, {
+      as: "customer",
+      foreignKey: "customer_id",
+    });
+  };
   return Order;
 };
