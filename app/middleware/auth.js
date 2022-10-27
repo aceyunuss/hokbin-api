@@ -11,10 +11,10 @@ const auth = (req, res, next) => {
   try {
     const decoded = jwt.verify(token.split(" ")[1], config.TOKEN_KEY);
     req.user = decoded;
+    return next();
   } catch (err) {
     response.invalid("Invalid Token", res);
   }
-  return next();
 };
 
 module.exports = auth;
