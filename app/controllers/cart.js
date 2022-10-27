@@ -5,53 +5,6 @@ const general = require("../utils/general");
 const promo = require("../controllers/promo");
 const order = require("../controllers/order");
 
-const insertData = async (data_ins) => {
-  try {
-    const stat_ins = await Cart.create(data_ins);
-    const stat_res = stat_ins.toJSON();
-    return { msg: "success", data: stat_res };
-  } catch (error) {
-    return { msg: error };
-  }
-};
-
-const getData = async (cond = {}) => {
-  try {
-    const stat_find = await Cart.findAll({ where: cond });
-    return {
-      msg: "success",
-      count: stat_find.length,
-      data: stat_find,
-    };
-  } catch (error) {
-    return { msg: error };
-  }
-};
-
-const updateData = async (id, data = {}) => {
-  try {
-    await Cart.update(data, {
-      where: { id: id },
-    });
-    const data_ret = await getData({ id: id });
-    const stat_res = data_ret.data;
-    return { msg: "success", data: stat_res };
-  } catch (error) {
-    return { msg: error };
-  }
-};
-
-const deleteData = async (id) => {
-  try {
-    const stat_res = await Cart.destroy({
-      where: { id: id },
-    });
-    return { msg: "success", data: stat_res };
-  } catch (error) {
-    return { msg: error };
-  }
-};
-
 exports.create = async (req, res) => {
   if (
     !req.body.menu_id ||
@@ -72,7 +25,7 @@ exports.create = async (req, res) => {
     total: req.body.total,
     customer_id: req.body.customer_id,
   };
-  const ins = await insertData(cart);
+  const ins = await Cart.insertData(cart);
   if (typeof ins.msg != "object") {
     response.success("Success add cart", res, ins.data);
   } else {
@@ -81,7 +34,7 @@ exports.create = async (req, res) => {
 };
 
 exports.findAll = async (req, res) => {
-  const fnd = await getData();
+  const fnd = await Cart.getData();
   if (typeof fnd.msg != "object") {
     response.success("Success get cart", res, fnd.data);
   } else {
@@ -91,7 +44,7 @@ exports.findAll = async (req, res) => {
 
 exports.findOne = async (req, res) => {
   const cond = { customer_id: req.params.id };
-  const fnd = await getData(cond);
+  const fnd = await Cart.getData(cond);
   if (typeof fnd.msg != "object") {
     if (fnd.count > 0) {
       response.success("Success get cart", res, fnd.data);
@@ -133,7 +86,7 @@ exports.update = async (req, res) => {
     total: req.body.total,
   };
 
-  const upd = await updateData(id, data);
+  const upd = await Cart.updateData(id, data);
   if (typeof upd.msg != "object") {
     response.success("Success update cart", res, upd.data);
   } else {
@@ -143,7 +96,7 @@ exports.update = async (req, res) => {
 
 exports.delete = async (req, res) => {
   const id = req.params.id;
-  const del = await deleteData(id);
+  const del = await Cart.deleteData(id);
 
   if (typeof del.msg != "object") {
     if (del.data == 1) {
@@ -161,7 +114,7 @@ exports.checkout = async (req, res) => {
   const discount_id = req.body.discount_id;
   let item = [];
   let total_item = 0;
-  const fnd = await getData(cond);
+  const fnd = await Cart.getData(cond);
 
   if (fnd.count == 0) {
     response.notFound("Cart item not fount", res);

@@ -25,5 +25,53 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "Cart_item",
     }
   );
+
+  Cart_item.insertData = async (data_ins) => {
+    try {
+      const stat_ins = await Cart_item.create(data_ins);
+      const stat_res = stat_ins.toJSON();
+      return { msg: "success", data: stat_res };
+    } catch (error) {
+      return { msg: error };
+    }
+  };
+
+  Cart_item.getData = async (cond = {}) => {
+    try {
+      const stat_find = await Cart_item.findAll({ where: cond });
+      return {
+        msg: "success",
+        count: stat_find.length,
+        data: stat_find,
+      };
+    } catch (error) {
+      return { msg: error };
+    }
+  };
+
+  Cart_item.updateData = async (id, data = {}) => {
+    try {
+      await Cart.update(data, {
+        where: { id: id },
+      });
+      const data_ret = await Cart_item.getData({ id: id });
+      const stat_res = data_ret.data;
+      return { msg: "success", data: stat_res };
+    } catch (error) {
+      return { msg: error };
+    }
+  };
+
+  Cart_item.deleteData = async (id) => {
+    try {
+      const stat_res = await Cart_item.destroy({
+        where: { id: id },
+      });
+      return { msg: "success", data: stat_res };
+    } catch (error) {
+      return { msg: error };
+    }
+  };
+
   return Cart_item;
 };
