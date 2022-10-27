@@ -1,14 +1,15 @@
 module.exports = (app) => {
   const menu = require("../controllers/menu.js");
+  const auth = require("../middleware/auth");
 
   var router = require("express").Router();
-  router.post("/", menu.create);
-  router.get("/", menu.findAll);
-  router.get("/filter", menu.findFilter);
-  router.get("/category/:id", menu.findByCategory);
-  router.get("/:id", menu.findOne);
-  router.put("/:id", menu.update);
-  router.delete("/:id", menu.delete);
+  router.post("/", auth, menu.create);
+  router.get("/", auth, menu.findAll);
+  router.get("/filter", auth, menu.findFilter);
+  router.get("/category/:id", auth, menu.findByCategory);
+  router.get("/:id", auth, menu.findOne);
+  router.put("/:id", auth, menu.update);
+  router.delete("/:id", auth, menu.delete);
 
   app.use("/api/menu", router);
 };
