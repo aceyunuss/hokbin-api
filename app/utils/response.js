@@ -23,6 +23,14 @@ exports.badRequest = (msg, res) => {
   });
 };
 
+exports.invalid = (msg, res) => {
+  res.status(401).json({
+    status: "failed",
+    status_code: 401,
+    message: msg,
+  });
+};
+
 exports.forbidden = (msg, res) => {
   res.status(403).json({
     status: "failed",
