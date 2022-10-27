@@ -2,6 +2,28 @@ const db = require("../models");
 const User = db.User;
 const response = require("../utils/response");
 const general = require("../utils/general");
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
+dotenv.config();
+
+const bcrypt = require("bcrypt");
+
+function generateAccessToken(user) {
+  acc_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: "15m",
+  });
+  return acc_token;
+}
+
+let refreshTokens = [];
+
+function generateRefreshToken(user) {
+  const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: "20m",
+  });
+  refreshTokens.push(refreshToken);
+  return refreshToken;
+}
 
 exports.create = async (req, res) => {
   if (
@@ -132,18 +154,28 @@ exports.login = async (req, res) => {
   }
   const cond = {
     email: req.body.email,
-    password: req.body.password,
+    // password: req.body.password,
   };
 
-  const col = ["id", "name"];
+  const col = ["id", "name", "password"];
 
   const fnd = await User.getData(cond, col);
+
   if (typeof fnd.msg != "object") {
     if (fnd.count > 0) {
-      fnd.data[0].token = "test123";
-      response.success("Success get user", res, fnd.data);
+      if (await bcrypt.compare(req.body.password, fnd.data[0].password)) {
+        fnd.data[0].type = "Bearer";
+        fnd.data[0].token = jwt.sign(
+          { user_id: fnd.data[0].id, email: req.body.email },
+          process.env.TOKEN_KEY,
+          { expiresIn: "2h" }
+        );
+        response.success("Success login", res, fnd.data);
+      } else {
+        response.failLogin("Email and passsword not match", res);
+      }
     } else {
-      response.failLogin("User not found", res);
+      response.failLogin("Email not found", res);
     }
   } else {
     response.internalServerError("Error get user", res);

@@ -1,10 +1,12 @@
 const express = require("express");
 const cors = require("cors");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const app = express();
 
 var corsOptions = {
-  origin: "http://localhost:3000",
+  origin: "http://localhost:3001",
 };
 
 app.use(cors(corsOptions));
@@ -21,6 +23,8 @@ app.get("/", (req, res) => {
 });
 
 //add routes
+
+// require("./app/routes/auth")(app);
 require("./app/routes/menu_category_routes")(app);
 require("./app/routes/menu_routes")(app);
 require("./app/routes/promo_routes")(app);
@@ -29,7 +33,6 @@ require("./app/routes/cart_routes")(app);
 require("./app/routes/driver_routes")(app);
 require("./app/routes/order_routes")(app);
 
-require("dotenv").config();
 // set port, listen for requests
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
